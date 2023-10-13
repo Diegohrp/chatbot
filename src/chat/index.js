@@ -30,7 +30,6 @@ const htmlResponse = `
 `;
 
 let client;
-
 async function startBot(res) {
   console.log('Iniciando');
   try {
@@ -79,10 +78,7 @@ async function startBot(res) {
             '--single-process',
             '--no-zygote',
           ],
-          executablePath:
-            process.env.NODE_ENV === 'production'
-              ? process.env.PUPPETEER_EXECUTABLE_PATH
-              : puppeteer.executablePath(),
+          executablePath: '/usr/bin/google-chrome-stable',
         },
       }
     );
