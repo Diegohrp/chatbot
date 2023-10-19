@@ -5,6 +5,7 @@ require('dotenv').config();
 const { Chat } = require('./Chat');
 const { chatStates } = require('./chatStates');
 
+//html que contiene el código QR en una etiqueta <img>
 const htmlResponse = `
 <!DOCTYPE html>
 <html lang="en">
@@ -33,11 +34,13 @@ let client;
 async function startBot(res) {
   console.log('Iniciando');
   try {
+    //Para cerrar adecuadamente el navegador si se recarga la página
     if (client) {
       client.close();
     }
     client = await venom.create(
       'chat-session',
+      //Función para exportar el código QR como imagen
       async (base64Qr, asciiQR, attempts, urlCode) => {
         const matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
         if (matches.length !== 3) {
@@ -60,10 +63,13 @@ async function startBot(res) {
             } else if (attempts === 1) {
               console.log('Código QR guardado como codigo-qr.png');
               res.send(htmlResponse);
+              //Tiempo de espera para escanear el código
+              setTimeout(() => {}, 180000);
             }
           }
         );
       },
+      //Función para saber si ya se ha escaneado el QR
       (statusSession, session) => {
         if (statusSession === 'isLogged') {
           res.send('Ya has escaneado el código QR');
@@ -88,17 +94,29 @@ async function startBot(res) {
     console.error(error);
   }
 }
+//Hashmap que almacena cada una de las instancias "Chat"
+//Utiliza como key el número de teléfono del usuario que manda mensaje
+const chatInstances = new Map();
 
 function start(client) {
-  let chat = new Chat(client);
   client.onMessage(async (payload) => {
-    chat.userPhone = payload.from;
+    const userPhone = payload.from;
+    //Si no hay una instancia de "Chat" almacenada que corresponda al número de tel
+    //implica que es el inicio de la conversación, se crea la instancia y se guarda en el hashmap
+    let chat = chatInstances.get(userPhone);
+    if (!chat) {
+      chat = new Chat(client);
+      chat.userPhone = userPhone;
+      chatInstances.set(userPhone, chat);
+    }
+    //Se asigna el mensaje a la instancia
     chat.message = { content: payload.body, fromGroup: payload.isGroupMsg };
 
     try {
       await chat.replyToUser();
       if (chat.chatState.current.state === chatStates.onExit) {
-        chat = new Chat(client);
+        //chat = new Chat(client);
+        chatInstances.delete(userPhone);
       }
     } catch (err) {
       console.error(err);
