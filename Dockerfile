@@ -1,7 +1,7 @@
-# Usar una imagen base de Node.js
-FROM node:14-slim
+# Usar una imagen base de Node.js versión 16
+FROM node:16-slim
 
-# Configurar Puppeteer para que no descargue su propia versión de Chromium
+# Configurar Puppeter para que no descargue su propia versión de Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
@@ -17,7 +17,7 @@ RUN apt-get update \
 # Establecer el directorio de trabajo
 WORKDIR /usr/src/app
 
-# Copiar el `package.json` y `package-lock.json` (si está disponible)
+# Copiar el 'package.json' y 'package-lock.json' (si está disponible)
 COPY package*.json ./
 
 # Instalar dependencias del proyecto, incluyendo Puppeteer.
